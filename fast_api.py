@@ -1,12 +1,13 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from ultralytics import YOLO
 from PIL import Image, ImageDraw
 import io
 import base64
 from collections import Counter
 
-app = FastAPI()
+app = Flask(__name__)
+CORS(app)
 
 # Load YOLO model
 try:
@@ -28,11 +29,12 @@ LABEL_COLORS = {
     "hat dau phong": "pink",
 }
 
-@app.post("/xldl")
-async def predict(file: UploadFile = File(...)):
+@app.route('/xldl', methods=['POST'])
+def predict():
     try:
         # Đọc ảnh từ file upload
-        content = await file.read()
+        file = request.files['file']
+        content = file.read()
         image = Image.open(io.BytesIO(content))
 
         # Dự đoán bằng YOLO
@@ -67,16 +69,15 @@ async def predict(file: UploadFile = File(...)):
         img_byte_arr.seek(0)
         image_base64 = base64.b64encode(img_byte_arr.getvalue()).decode()
 
-        # Trả về kết quả
-        return JSONResponse(content={
+        # Trả về kết quả dưới dạng JSON
+        return jsonify({
             "image": image_base64,
             "detections": detection_summary
         })
 
     except Exception as e:
         print(f"Error during processing: {e}")
-        return JSONResponse(status_code=400, content={"error": f"An error occurred: {e}"})
+        return jsonify({"error": f"An error occurred: {e}"}), 400
 
-# if __name__ == '__main__':
-#     app.run(debug=False, host='0.0.0.0', port=8888, use_reloader=False)
-    # uvicorn fast_api:app --host 0.0.0.0 --port 8000
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=8000)

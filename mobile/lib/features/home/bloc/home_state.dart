@@ -24,10 +24,10 @@ class HomeTakeAPhotoSuccess extends HomeActionState{
 class HomeTakeAPhotoFailed extends HomeActionState{}
 
 class HomeClickDetectSuccess extends HomeActionState{
-  final File image;
+  final String imageUrl;
   final Map<String, dynamic> detections;
 
-  HomeClickDetectSuccess(this.image, this.detections);
+  HomeClickDetectSuccess(this.imageUrl, this.detections);
 }
 
 class HomeClickDetectFailed extends HomeActionState{}

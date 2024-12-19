@@ -1,28 +1,26 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meta/meta.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart'; // Import Cloudinary SDK
 
 part 'home_event.dart';
 part 'home_state.dart';
 
-final cloudinary = Cloudinary("df7mhs6xj", "247429931397219", "X636Td3W-_ilWARhkXIxqMWNptM");
+
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
+  Cloudinary cloudinary = Cloudinary.full(apiKey: '247429931397219', apiSecret: 'X636Td3W-_ilWARhkXIxqMWNptM', cloudName: 'df7mhs6xj');
 
   final ImagePicker _picker = ImagePicker();
   final Dio dio = Dio();
-  final String url = 'http://10.233.1.6:8000/xldl';
+  // final String url = 'http://10.233.1.6:8000/xldl';
 
   // final String url = 'http://0.0.0.0:8000/xldl';
 
-  // final String url = 'https://hocmayungdung.onrender.com/xldl';
+  final String url = 'https://hocmayungdung.onrender.com/xldl';
 
   HomeBloc() : super(HomeInitial()) {
     on<HomeInitialEvent>(homeInitialEvent);
@@ -78,8 +76,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // Tải ảnh lên Cloudinary
       final response_ = await cloudinary.uploadFile(
         fileBytes: imageBytes,
-        resourceType: CloudinaryResourceType.Image,  // Đảm bảo là ảnh
-        folder: "your_folder_name", // Tùy chọn: Thư mục đích trên Cloudinary
+        resourceType: CloudinaryResourceType.image,  // Đảm bảo là ảnh
       );
 
       Map<String, dynamic> bodyData = {
@@ -99,18 +96,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         // Lấy danh sách phát hiện từ phản hồi
         final Map<String, dynamic> detections = Map<String, dynamic>.from(responseData['detections']);
 
-        // Giải mã ảnh base64 từ phản hồi
-        final String base64Image = responseData['image'];
-        final Uint8List imageBytes = base64Decode(base64Image);
+        final String imageUrl = responseData['image'];
+        print(imageUrl);
 
-        // Tạo tên file với timestamp để tránh bị cache
-        final directory = await getTemporaryDirectory();
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filePath = '${directory.path}/image_with_bounding_box_$timestamp.jpg';
-        final imageFile = File(filePath)..writeAsBytesSync(imageBytes);
-
-        // Emit state thành công, kèm danh sách phát hiện
-        emit(HomeClickDetectSuccess(imageFile, detections));
+        emit(HomeClickDetectSuccess(imageUrl, detections));
       } else {
         emit(HomeClickDetectFailed());
       }

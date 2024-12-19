@@ -74,10 +74,7 @@ class Home extends StatelessWidget {
                         Container(
                           height: 350,
                           margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                          child: Image.file(
-                            state.image,
-                            key: ValueKey(state.image.path),
-                          ),
+                          child: Image.network(state.imageUrl),
                         ),
                         Container(
                           height: 100,

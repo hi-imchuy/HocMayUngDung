@@ -28,8 +28,12 @@ jobs:
           source venv/bin/activate
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r server/setup.txt
         
+      - name: Zip only the server folder for deployment
+        run: |
+          zip -r release.zip server
+          
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
@@ -58,7 +62,7 @@ jobs:
         with:
           name: python-app
 
-      - name: Unzip artifact for deployment
+      - name: Unzip artifact for deployment into server folder
         run: unzip release.zip
 
       

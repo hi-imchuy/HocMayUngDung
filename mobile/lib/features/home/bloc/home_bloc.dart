@@ -7,9 +7,12 @@ import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meta/meta.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:cloudinary_sdk/cloudinary_sdk.dart'; // Import Cloudinary SDK
 
 part 'home_event.dart';
 part 'home_state.dart';
+
+final cloudinary = Cloudinary("df7mhs6xj", "247429931397219", "X636Td3W-_ilWARhkXIxqMWNptM");
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
@@ -69,10 +72,24 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         "file": await MultipartFile.fromFile(file.path, filename: 'image.jpg'),
       });
 
+      // Đọc dữ liệu ảnh dưới dạng byte
+      List<int> imageBytes = await file.readAsBytes();
+
+      // Tải ảnh lên Cloudinary
+      final response_ = await cloudinary.uploadFile(
+        fileBytes: imageBytes,
+        resourceType: CloudinaryResourceType.Image,  // Đảm bảo là ảnh
+        folder: "your_folder_name", // Tùy chọn: Thư mục đích trên Cloudinary
+      );
+
+      Map<String, dynamic> bodyData = {
+        "image_url": response_.secureUrl,  // Truyền URL của ảnh đã upload lên Cloudinary
+      };
+
       // Gửi ảnh lên server
       Response response = await dio.post(
         url,
-        data: formData,
+        data: bodyData,
         options: Options(responseType: ResponseType.json), // Nhận JSON từ server
       );
 

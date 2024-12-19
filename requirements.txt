@@ -1,0 +1,4 @@
+cloudinary
+ultralytics
+flask
+flask_cors

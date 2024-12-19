@@ -1,1 +1,1 @@
-python server/fast_api.py
+python app.py

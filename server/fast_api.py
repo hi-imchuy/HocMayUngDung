@@ -3,11 +3,20 @@ from flask_cors import CORS
 from ultralytics import YOLO
 from PIL import Image, ImageDraw
 import io
-import base64
+import requests
+import cloudinary
+import cloudinary.uploader
 from collections import Counter
 
 app = Flask(__name__)
 CORS(app)
+
+# Cấu hình Cloudinary
+cloudinary.config(
+    cloud_name="df7mhs6xj",  # Thay bằng tên cloud của bạn
+    api_key="247429931397219",        # Thay bằng API Key của bạn
+    api_secret="X636Td3W-_ilWARhkXIxqMWNptM"   # Thay bằng API Secret của bạn
+)
 
 # Load YOLO model
 try:
@@ -32,10 +41,20 @@ LABEL_COLORS = {
 @app.route('/xldl', methods=['POST'])
 def predict():
     try:
-        # Đọc ảnh từ file upload
-        file = request.files['file']
-        content = file.read()
-        image = Image.open(io.BytesIO(content))
+        # Lấy URL ảnh từ body của yêu cầu
+        data = request.json  # Lấy dữ liệu JSON từ request
+        image_url = data.get('image_url')
+
+        if not image_url:
+            return jsonify({"error": "No image URL provided"}), 400
+
+        # Tải ảnh từ URL
+        response = requests.get(image_url)
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to fetch image from URL"}), 400
+
+        # Đọc ảnh từ content
+        image = Image.open(io.BytesIO(response.content))
 
         # Dự đoán bằng YOLO
         results = model(image)
@@ -63,15 +82,16 @@ def predict():
         # Thống kê số lượng từng loại nhãn
         detection_summary = dict(Counter(detections))
 
-        # Chuyển ảnh có bounding box thành base64
+        # Tải ảnh lên Cloudinary
         img_byte_arr = io.BytesIO()
         image.save(img_byte_arr, format='JPEG')
         img_byte_arr.seek(0)
-        image_base64 = base64.b64encode(img_byte_arr.getvalue()).decode()
+
+        upload_response = cloudinary.uploader.upload(img_byte_arr, resource_type="image")
 
         # Trả về kết quả dưới dạng JSON
         return jsonify({
-            "image": image_base64,
+            "image": upload_response["secure_url"],
             "detections": detection_summary
         })
 
